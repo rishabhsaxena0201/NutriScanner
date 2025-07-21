@@ -1,142 +1,135 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>NutriScanner</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NutriScanner with EU Nutri-Score</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      padding: 1rem;
-      text-align: center;
-      background: #f7f7f7;
+      font-family: sans-serif;
+      padding: 1em;
+      background: #f5f5f5;
+      color: #333;
+    }
+    h1 {
+      color: #2c3e50;
     }
     video, canvas, img {
-      width: 90%;
-      max-width: 320px;
-      margin-top: 1rem;
-      border-radius: 12px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.2);
-    }
-    button, select {
-      margin: 0.5rem;
-      padding: 0.6rem 1rem;
-      font-size: 1rem;
-      border-radius: 8px;
-      border: none;
-      background-color: #4CAF50;
-      color: white;
+      max-width: 100%;
     }
     #output {
-      margin-top: 1rem;
+      margin-top: 1em;
+      white-space: pre-wrap;
+      background: #fff;
+      padding: 1em;
+      border-radius: 8px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+    .grade {
+      font-size: 2em;
       font-weight: bold;
+      padding: 0.2em 0.5em;
+      border-radius: 8px;
+      color: white;
     }
-    #score {
-      font-size: 2rem;
-      color: #333;
-      margin-top: 0.5rem;
-    }
+    .grade.A { background: #009966; }
+    .grade.B { background: #99cc00; }
+    .grade.C { background: #ffcc00; }
+    .grade.D { background: #ff9933; }
+    .grade.E { background: #cc0033; }
   </style>
 </head>
 <body>
-  <h2>NutriScanner 🍏</h2>
+  <h1>NutriScanner (EU Nutri-Score)</h1>
 
-  <select id="cameraSelect">
-    <option value="environment">Rear Camera</option>
-    <option value="user">Front Camera</option>
-  </select>
+  <input type="file" accept="image/*" id="imageInput">
+  <br><br>
+  <img id="preview" style="display:none;">
+  <div id="output">Scan an image with nutrition info to begin...</div>
 
-  <button onclick="startCamera()">Start Camera</button>
-  <button onclick="captureImage()">Scan</button>
-  <input type="file" accept="image/*" onchange="handleImageUpload(event)"/>
-
-  <video id="video" autoplay playsinline></video>
-  <canvas id="canvas" style="display:none;"></canvas>
-  <div id="output">Scanning...</div>
-  <div id="score"></div>
-
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/tesseract.min.js"></script>
   <script>
-    let video = document.getElementById('video');
-    let canvas = document.getElementById('canvas');
-    let ctx = canvas.getContext('2d');
-    let output = document.getElementById('output');
-    let scoreDiv = document.getElementById('score');
+    const input = document.getElementById('imageInput');
+    const preview = document.getElementById('preview');
+    const output = document.getElementById('output');
 
-    let currentStream = null;
-
-    async function startCamera() {
-      if (currentStream) {
-        currentStream.getTracks().forEach(track => track.stop());
-      }
-
-      const facingMode = document.getElementById('cameraSelect').value;
-      const constraints = {
-        video: { facingMode }
-      };
-
-      try {
-        currentStream = await navigator.mediaDevices.getUserMedia(constraints);
-        video.srcObject = currentStream;
-      } catch (err) {
-        output.textContent = "Camera error: " + err;
-      }
-    }
-
-    function captureImage() {
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      ctx.drawImage(video, 0, 0);
-      extractText(canvas);
-    }
-
-    function handleImageUpload(event) {
-      const file = event.target.files[0];
+    input.addEventListener('change', async () => {
+      const file = input.files[0];
       if (!file) return;
+      const url = URL.createObjectURL(file);
+      preview.src = url;
+      preview.style.display = 'block';
+      output.textContent = 'Extracting text...';
 
-      const img = new Image();
-      const reader = new FileReader();
-      reader.onload = () => {
-        img.onload = () => {
-          canvas.width = img.width;
-          canvas.height = img.height;
-          ctx.drawImage(img, 0, 0);
-          extractText(canvas);
-        };
-        img.src = reader.result;
+      const result = await Tesseract.recognize(url, 'eng');
+      const text = result.data.text;
+      output.textContent = text + "\n\nExtracting nutrition values...";
+
+      const values = extractNutrition(text);
+      const score = calculateNutriScore(values);
+
+      output.textContent = `Extracted Values:\n${JSON.stringify(values, null, 2)}\n\nNutri-Score: `;
+
+      const gradeSpan = document.createElement('span');
+      gradeSpan.className = `grade ${score.grade}`;
+      gradeSpan.textContent = score.grade;
+      output.appendChild(gradeSpan);
+    });
+
+    function extractNutrition(text) {
+      const lines = text.split(/\n|,/).map(l => l.toLowerCase());
+      const get = (key) => {
+        const line = lines.find(l => l.includes(key));
+        if (!line) return null;
+        const match = line.match(/([0-9]+([.,][0-9]+)*)/);
+        return match ? parseFloat(match[1].replace(',', '.')) : null;
       };
-      reader.readAsDataURL(file);
+      return {
+        energy: get('energy') || 0, // in kJ
+        sugars: get('sugar') || 0,
+        satFat: get('satur') || 0,
+        sodium: get('salt') ? (get('salt') * 400) : 0, // salt (g) to sodium (mg)
+        fiber: get('fiber') || 0,
+        protein: get('protein') || 0,
+        fruitsPercent: get('fruit') || 0
+      };
     }
 
-    function extractText(sourceCanvas) {
-      output.textContent = "Scanning...";
-      scoreDiv.textContent = "";
+    function calculateNutriScore(n) {
+      let score = 0;
+      // Negative points
+      score += getPoints(n.energy, [335, 670, 1005, 1340, 1675, 2010, 2345, 2680, 3015, 3350]);
+      score += getPoints(n.sugars, [4.5, 9, 13.5, 18, 22.5, 27, 31, 36, 40, 45]);
+      score += getPoints(n.satFat, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+      score += getPoints(n.sodium, [90, 180, 270, 360, 450, 540, 630, 720, 810, 900]);
 
-      Tesseract.recognize(sourceCanvas, 'eng')
-        .then(({ data: { text } }) => {
-          output.textContent = text;
-          scoreDiv.textContent = "Score: " + getScore(text);
-        })
-        .catch(err => {
-          output.textContent = "Error: " + err.message;
-        });
+      let positive = 0;
+      positive += getReversePoints(n.fiber, [0.9, 1.9, 2.8, 3.7, 4.7]);
+      positive += getReversePoints(n.protein, [1.6, 3.2, 4.8, 6.4, 8]);
+      positive += n.fruitsPercent >= 80 ? 5 : n.fruitsPercent >= 60 ? 2 : n.fruitsPercent >= 40 ? 1 : 0;
+
+      let finalScore = score - positive;
+      let grade = 'E';
+      if (finalScore <= -1) grade = 'A';
+      else if (finalScore <= 2) grade = 'B';
+      else if (finalScore <= 10) grade = 'C';
+      else if (finalScore <= 18) grade = 'D';
+
+      return { score: finalScore, grade };
     }
 
-    function getScore(text) {
-      let harmful = ['sugar', 'glucose', 'fructose', 'salt', 'sodium', 'palm oil', 'preservatives'];
-      let good = ['fiber', 'protein', 'vitamin', 'whole grain', 'calcium'];
+    function getPoints(value, thresholds) {
+      for (let i = thresholds.length - 1; i >= 0; i--) {
+        if (value > thresholds[i]) return i + 1;
+      }
+      return 0;
+    }
 
-      text = text.toLowerCase();
-
-      let badCount = harmful.filter(item => text.includes(item)).length;
-      let goodCount = good.filter(item => text.includes(item)).length;
-
-      if (badCount === 0 && goodCount > 0) return "A";
-      if (badCount <= 1) return "B";
-      if (badCount === 2) return "C";
-      if (badCount >= 3) return "D";
-
-      return "E";
+    function getReversePoints(value, thresholds) {
+      for (let i = thresholds.length - 1; i >= 0; i--) {
+        if (value >= thresholds[i]) return i + 1;
+      }
+      return 0;
     }
   </script>
 </body>
