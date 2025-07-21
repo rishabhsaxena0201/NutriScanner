@@ -6,133 +6,137 @@
   <title>NutriScanner</title>
   <style>
     body {
-      font-family: sans-serif;
-      background: #f4f4f4;
+      font-family: Arial, sans-serif;
       padding: 1rem;
       text-align: center;
+      background: #f7f7f7;
     }
     video, canvas, img {
-      max-width: 100%;
-      border-radius: 8px;
-      margin-bottom: 1rem;
+      width: 90%;
+      max-width: 320px;
+      margin-top: 1rem;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
     }
-    button {
-      padding: 0.5rem 1rem;
+    button, select {
       margin: 0.5rem;
-      font-size: 16px;
+      padding: 0.6rem 1rem;
+      font-size: 1rem;
+      border-radius: 8px;
+      border: none;
+      background-color: #4CAF50;
+      color: white;
     }
-    .score {
+    #output {
       margin-top: 1rem;
       font-weight: bold;
-      color: green;
+    }
+    #score {
+      font-size: 2rem;
+      color: #333;
+      margin-top: 0.5rem;
     }
   </style>
 </head>
 <body>
-  <h1>NutriScanner</h1>
+  <h2>NutriScanner 🍏</h2>
 
-  <video id="video" autoplay playsinline></video><br/>
-  <select id="cameraSelect"></select><br/>
+  <select id="cameraSelect">
+    <option value="environment">Rear Camera</option>
+    <option value="user">Front Camera</option>
+  </select>
 
-  <button id="startCamera">Start Camera</button>
-  <button id="capture">Capture</button>
-  <input type="file" id="imageUpload" accept="image/*" /><br/>
+  <button onclick="startCamera()">Start Camera</button>
+  <button onclick="captureImage()">Scan</button>
+  <input type="file" accept="image/*" onchange="handleImageUpload(event)"/>
 
+  <video id="video" autoplay playsinline></video>
   <canvas id="canvas" style="display:none;"></canvas>
-  <img id="capturedImage" /><br/>
+  <div id="output">Scanning...</div>
+  <div id="score"></div>
 
-  <p id="outputText">Waiting for input...</p>
-  <div class="score" id="scoreResult"></div>
-
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
   <script>
-    const video = document.getElementById('video');
-    const canvas = document.getElementById('canvas');
-    const ctx = canvas.getContext('2d');
-    const capturedImage = document.getElementById('capturedImage');
-    const outputText = document.getElementById('outputText');
-    const imageUpload = document.getElementById('imageUpload');
-    const scoreResult = document.getElementById('scoreResult');
-    const cameraSelect = document.getElementById('cameraSelect');
-    let stream;
+    let video = document.getElementById('video');
+    let canvas = document.getElementById('canvas');
+    let ctx = canvas.getContext('2d');
+    let output = document.getElementById('output');
+    let scoreDiv = document.getElementById('score');
 
-    async function populateCameraOptions() {
-      const devices = await navigator.mediaDevices.enumerateDevices();
-      cameraSelect.innerHTML = '';
-      devices.forEach(device => {
-        if (device.kind === 'videoinput') {
-          const option = document.createElement('option');
-          option.value = device.deviceId;
-          option.text = device.label || `Camera ${cameraSelect.length + 1}`;
-          cameraSelect.appendChild(option);
-        }
-      });
-    }
+    let currentStream = null;
 
-    document.getElementById('startCamera').onclick = async () => {
-      if (stream) stream.getTracks().forEach(t => t.stop());
+    async function startCamera() {
+      if (currentStream) {
+        currentStream.getTracks().forEach(track => track.stop());
+      }
 
+      const facingMode = document.getElementById('cameraSelect').value;
       const constraints = {
-        video: {
-          deviceId: cameraSelect.value
-            ? { exact: cameraSelect.value }
-            : { facingMode: 'environment' }
-        }
+        video: { facingMode }
       };
 
       try {
-        stream = await navigator.mediaDevices.getUserMedia(constraints);
-        video.srcObject = stream;
+        currentStream = await navigator.mediaDevices.getUserMedia(constraints);
+        video.srcObject = currentStream;
       } catch (err) {
-        alert('Camera error: ' + err.message);
+        output.textContent = "Camera error: " + err;
       }
-    };
+    }
 
-    document.getElementById('capture').onclick = () => {
+    function captureImage() {
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      const imageData = canvas.toDataURL('image/png');
-      capturedImage.src = imageData;
-      extractText(imageData);
-    };
+      ctx.drawImage(video, 0, 0);
+      extractText(canvas);
+    }
 
-    imageUpload.onchange = e => {
-      const file = e.target.files[0];
+    function handleImageUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const img = new Image();
       const reader = new FileReader();
-      reader.onload = function () {
-        capturedImage.src = reader.result;
-        extractText(reader.result);
+      reader.onload = () => {
+        img.onload = () => {
+          canvas.width = img.width;
+          canvas.height = img.height;
+          ctx.drawImage(img, 0, 0);
+          extractText(canvas);
+        };
+        img.src = reader.result;
       };
-      if (file) reader.readAsDataURL(file);
-    };
-
-    async function extractText(image) {
-      outputText.textContent = 'Scanning ingredients...';
-      const result = await Tesseract.recognize(image, 'eng');
-      const text = result.data.text;
-      outputText.textContent = text;
-      scoreIngredients(text);
+      reader.readAsDataURL(file);
     }
 
-    function scoreIngredients(text) {
-      const harmful = ['sodium', 'sugar', 'fructose', 'glucose', 'palm oil', 'preservative'];
-      let score = 100;
-      const lower = text.toLowerCase();
+    function extractText(sourceCanvas) {
+      output.textContent = "Scanning...";
+      scoreDiv.textContent = "";
 
-      harmful.forEach(term => {
-        if (lower.includes(term)) score -= 10;
-      });
-
-      if (score < 0) score = 0;
-      scoreResult.textContent = `Score: ${score}/100`;
+      Tesseract.recognize(sourceCanvas, 'eng')
+        .then(({ data: { text } }) => {
+          output.textContent = text;
+          scoreDiv.textContent = "Score: " + getScore(text);
+        })
+        .catch(err => {
+          output.textContent = "Error: " + err.message;
+        });
     }
 
-    // Populate cameras at load
-    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-      populateCameraOptions();
-    } else {
-      alert("Camera not supported on this device/browser.");
+    function getScore(text) {
+      let harmful = ['sugar', 'glucose', 'fructose', 'salt', 'sodium', 'palm oil', 'preservatives'];
+      let good = ['fiber', 'protein', 'vitamin', 'whole grain', 'calcium'];
+
+      text = text.toLowerCase();
+
+      let badCount = harmful.filter(item => text.includes(item)).length;
+      let goodCount = good.filter(item => text.includes(item)).length;
+
+      if (badCount === 0 && goodCount > 0) return "A";
+      if (badCount <= 1) return "B";
+      if (badCount === 2) return "C";
+      if (badCount >= 3) return "D";
+
+      return "E";
     }
   </script>
 </body>
