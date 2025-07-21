@@ -7,29 +7,17 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="container">
-    <h1>Ingredient Scanner</h1>
-
-    <div class="video-section">
-      <video id="video" autoplay playsinline></video>
-      <canvas id="canvas" style="display: none;"></canvas>
+  <div class="scanner-container">
+    <h1>NutriScanner</h1>
+    <video id="video" autoplay playsinline></video>
+    <canvas id="canvas" style="display:none;"></canvas>
+    <div class="button-row">
+      <button id="start-camera">📷 Start Camera</button>
+      <button id="switch-camera">🔁 Switch Camera</button>
+      <button id="capture" disabled>🖼️ Capture</button>
     </div>
-
-    <div class="button-group">
-      <button id="capture">📷 Scan</button>
-      <label for="upload" class="upload-label">📁 Upload</label>
-      <input type="file" accept="image/*" id="upload" style="display: none;">
-    </div>
-
-    <div class="progress-bar" id="progressBar"></div>
-
-    <div class="output">
-      <h2>Extracted Ingredients:</h2>
-      <pre id="outputText"></pre>
-    </div>
+    <input type="file" id="image-upload" accept="image/*">
+    <div id="output"></div>
   </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
-  <script src="script.js"></script>
 </body>
 </html>
