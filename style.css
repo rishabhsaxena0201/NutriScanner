@@ -1,27 +1,42 @@
 body {
-  font-family: sans-serif;
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #f4f4f4;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+}
+
+.container {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 20px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
   text-align: center;
-  padding: 10px;
-}
-
-video {
   width: 90%;
-  max-width: 400px;
-  margin-top: 10px;
-  border: 2px solid #aaa;
-  border-radius: 8px;
+  max-width: 600px;
 }
 
-.controls {
-  margin-bottom: 10px;
+h1 {
+  color: #2c3e50;
+  margin-bottom: 20px;
 }
 
-#captureButton {
-  margin-top: 10px;
+input[type="file"] {
+  margin: 10px 0;
 }
 
-#output {
-  margin-top: 20px;
-  padding: 10px;
-  border: 1px solid #ccc;
+.result-box {
+  background-color: #ecf0f1;
+  padding: 1rem;
+  border-radius: 10px;
+  margin-top: 1rem;
+  min-height: 60px;
+}
+
+#score {
+  margin-top: 1rem;
+  font-size: 1.5rem;
+  font-weight: bold;
 }
