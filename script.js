@@ -1,7 +1,6 @@
 const video = document.getElementById('video');
 const canvas = document.getElementById('canvas');
 const captureBtn = document.getElementById('capture');
-const startBtn = document.getElementById('start-camera');
 const switchBtn = document.getElementById('switch-camera');
 const uploadInput = document.getElementById('image-upload');
 const outputDiv = document.getElementById('output');
@@ -27,17 +26,13 @@ async function startCamera() {
     video.style.display = 'block';
     captureBtn.disabled = false;
   } catch (err) {
-    alert("Unable to access camera.");
+    alert("Camera access failed.");
     console.error(err);
   }
 }
 
 switchBtn.addEventListener('click', () => {
   usingFrontCamera = !usingFrontCamera;
-  startCamera();
-});
-
-startBtn.addEventListener('click', () => {
   startCamera();
 });
 
@@ -61,5 +56,5 @@ uploadInput.addEventListener('change', () => {
   }
 });
 
-// Start with rear camera
+// Auto-start rear camera on load
 startCamera();
