@@ -1,72 +1,42 @@
-document.getElementById('imageInput').addEventListener('change', async function () {
-  const file = this.files[0];
-  const resultDiv = document.getElementById('result');
-  const scoreDiv = document.getElementById('score');
-
-  if (!file) return;
-
-  resultDiv.textContent = '🔍 Scanning...';
-  scoreDiv.textContent = '';
-
-  const image = URL.createObjectURL(file);
-
-  const { data: { text } } = await Tesseract.recognize(image, 'eng', {
-    logger: m => console.log(m)
-  });
-
-  resultDiv.textContent = text || '❌ Could not extract any text.';
-
-  const parsed = parseNutrition(text);
-  const grade = calculateNutriScore(parsed);
-  scoreDiv.textContent = grade ? `✅ Nutri-Score: ${grade}` : '⚠️ Could not compute score.';
-});
-
-function parseNutrition(text) {
-  const extract = (label, unit = '', factor = 1) => {
-    const regex = new RegExp(`${label}[^\\d]*(\\d+[\\.,]?\\d*)\\s*${unit}`, 'i');
-    const match = text.match(regex);
-    return match ? parseFloat(match[1].replace(',', '.')) * factor : 0;
-  };
-
-  return {
-    energy: extract('energy', 'kcal'),
-    sugars: extract('sugars?', 'g'),
-    saturatedFat: extract('saturates?|sat\\. fat', 'g'),
-    sodium: extract('sodium', 'mg', 1/1000),
-    fiber: extract('fibre|fiber', 'g'),
-    protein: extract('protein', 'g'),
-    fruits: extract('fruits|vegetables', '%')
-  };
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background: #f1f2f3;
+  margin: 0;
+  padding: 0;
 }
 
-function calculateNutriScore(n) {
-  let pointsNegative = 0;
-  pointsNegative += score(n.energy, [0, 335, 670, 1005, 1340, 1675, 2010, 2345, 2680, 3015, 3350]);
-  pointsNegative += score(n.sugars, [0, 4.5, 9, 13.5, 18, 22.5, 27, 31, 36, 40, 45]);
-  pointsNegative += score(n.saturatedFat, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
-  pointsNegative += score(n.sodium * 1000, [0, 90, 180, 270, 360, 450, 540, 630, 720, 810, 900]);
-
-  let pointsPositive = 0;
-  pointsPositive += score(n.fiber, [0.9, 1.9, 2.8, 3.7, 4.7], true);
-  pointsPositive += score(n.protein, [1.6, 3.2, 4.8, 6.4, 8], true);
-  pointsPositive += score(n.fruits, [40, 60, 80], true);
-
-  let total = pointsNegative - pointsPositive;
-
-  if (pointsNegative >= 11 && score(n.fruits, [40, 60, 80], true) < 5) {
-    total = pointsNegative - (score(n.fruits, [40, 60, 80], true) + score(n.fiber, [0.9, 1.9, 2.8, 3.7, 4.7], true));
-  }
-
-  if (total <= -1) return 'A';
-  if (total <= 2) return 'B';
-  if (total <= 10) return 'C';
-  if (total <= 18) return 'D';
-  return 'E';
+.container {
+  max-width: 800px;
+  margin: 2rem auto;
+  background: #fff;
+  padding: 2rem;
+  border-radius: 16px;
+  box-shadow: 0 0 15px rgba(0,0,0,0.1);
+  text-align: center;
 }
 
-function score(val, thresholds, reverse = false) {
-  for (let i = thresholds.length - 1; i >= 0; i--) {
-    if (val >= thresholds[i]) return reverse ? i + 1 : thresholds.length - i;
-  }
-  return 0;
+h1 {
+  color: #2c3e50;
+  font-size: 2.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.controls {
+  margin-bottom: 1rem;
+}
+
+#video {
+  width: 100%;
+  max-height: 300px;
+  margin: 1rem 0;
+  border-radius: 12px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+.text-box {
+  background: #ecf0f1;
+  padding: 1rem;
+  margin-top: 1rem;
+  border-radius: 8px;
+  font-size: 1.1rem;
 }
