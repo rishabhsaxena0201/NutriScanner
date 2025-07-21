@@ -1,116 +1,171 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NutriScanner - EU Nutri-Score</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>NutriScanner</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      margin: 20px;
-      background: #f4f4f4;
-      color: #333;
+      background: #f3f4f6;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
     }
     h1 {
-      text-align: center;
-      color: #2c3e50;
+      color: #2d3748;
     }
-    .container {
-      max-width: 600px;
-      margin: auto;
-      background: white;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    }
-    .output {
+    #upload {
       margin-top: 20px;
-      white-space: pre-line;
-      background: #ecf0f1;
-      padding: 10px;
-      border-radius: 8px;
     }
-    .score {
+    #image-preview {
+      max-width: 90%;
+      margin-top: 20px;
+    }
+    #results {
+      background: #ffffff;
+      padding: 15px;
+      margin-top: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+      text-align: left;
+      display: inline-block;
+    }
+    .nutriscore {
       font-size: 24px;
       font-weight: bold;
+      padding: 10px 15px;
+      border-radius: 6px;
+      color: white;
+      display: inline-block;
       margin-top: 10px;
     }
-    .grade-A { color: green; }
-    .grade-B { color: limegreen; }
-    .grade-C { color: orange; }
-    .grade-D { color: orangered; }
-    .grade-E { color: red; }
+    .A { background-color: #008000; }
+    .B { background-color: #a4c400; }
+    .C { background-color: #ffc107; }
+    .D { background-color: #ff5722; }
+    .E { background-color: #d32f2f; }
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.4/dist/tesseract.min.js"></script>
 </head>
 <body>
-  <div class="container">
-    <h1>NutriScanner</h1>
-    <input type="file" accept="image/*" onchange="handleImage(this)">
-    <div class="output" id="output">Upload image to extract data...</div>
-    <div class="score" id="score"></div>
-  </div>
+  <h1>NutriScanner</h1>
+  <input type="file" accept="image/*" id="upload" />
+  <img id="image-preview" src="#" style="display:none;" />
+  <div id="results"></div>
 
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
   <script>
-    async function handleImage(input) {
-      const file = input.files[0];
+    const upload = document.getElementById('upload');
+    const imagePreview = document.getElementById('image-preview');
+    const results = document.getElementById('results');
+
+    upload.addEventListener('change', async function () {
+      const file = this.files[0];
       if (!file) return;
-      document.getElementById("output").innerText = "Scanning...";
 
-      const result = await Tesseract.recognize(file, 'eng');
-      const text = result.data.text;
-      document.getElementById("output").innerText = text;
-
-      const values = extractValues(text);
-      const score = calculateNutriScore(values);
-      showScore(score);
-    }
-
-    function extractValues(text) {
-      const extract = (label) => {
-        const regex = new RegExp(`${label}[^\d]*(\d+[\.,]?\d*)`, 'i');
-        const match = text.match(regex);
-        return match ? parseFloat(match[1].replace(',', '.')) : 0;
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        imagePreview.src = e.target.result;
+        imagePreview.style.display = 'block';
+        results.innerHTML = 'Scanning...';
+        extractText(e.target.result);
       };
-      return {
-        energy: extract("energy|kJ"),
-        sugar: extract("sugar"),
-        satFat: extract("saturated"),
-        sodium: extract("sodium|salt"),
-        fiber: extract("fiber"),
-        protein: extract("protein"),
-        fvPercent: extract("fruit|vegetable|legume|nut")
-      };
+      reader.readAsDataURL(file);
+    });
+
+    function extractText(imgData) {
+      Tesseract.recognize(imgData, 'eng').then(({ data: { text } }) => {
+        const lines = text.split('\n').map(l => l.trim());
+        let data = {
+          energy: null,
+          sugars: null,
+          fat: null,
+          satFat: null,
+          salt: null,
+          fiber: null,
+          protein: null,
+          fruitVeg: null
+        };
+
+        lines.forEach(line => {
+          const lc = line.toLowerCase();
+
+          if (lc.includes('energy')) {
+            const match = line.match(/(\d+)\s?k?j/);
+            if (match) data.energy = parseInt(match[1]);
+          }
+          if (lc.includes('sugar')) {
+            const match = line.match(/(\d+(\.\d+)?)\s?g/);
+            if (match) data.sugars = parseFloat(match[1]);
+          }
+          if (lc.includes('saturat')) {
+            const match = line.match(/(\d+(\.\d+)?)\s?g/);
+            if (match) data.satFat = parseFloat(match[1]);
+          }
+          if (lc.includes('salt') || lc.includes('sodium')) {
+            const match = line.match(/(\d+(\.\d+)?)\s?g/);
+            if (match) data.salt = parseFloat(match[1]) * 1000; // g to mg
+          }
+          if (lc.includes('fiber')) {
+            const match = line.match(/(\d+(\.\d+)?)\s?g/);
+            if (match) data.fiber = parseFloat(match[1]);
+          }
+          if (lc.includes('protein')) {
+            const match = line.match(/(\d+(\.\d+)?)\s?g/);
+            if (match) data.protein = parseFloat(match[1]);
+          }
+          if (lc.includes('%') && lc.includes('fruit')) {
+            const match = line.match(/(\d+(\.\d+)?)\s?%/);
+            if (match) data.fruitVeg = parseFloat(match[1]);
+          }
+        });
+
+        const grade = calculateNutriScore(data);
+        displayResults(data, grade);
+      });
     }
 
-    function calculateNutriScore(values) {
-      const { energy, sugar, satFat, sodium, fiber, protein, fvPercent } = values;
+    function calculateNutriScore(d) {
+      if (!d.energy || !d.sugars || !d.satFat || !d.salt) return '?';
 
-      let negative = 0;
-      negative += energy > 3350 ? 10 : Math.floor(energy / 335);
-      negative += sugar > 45 ? 10 : Math.floor(sugar / 4.5);
-      negative += satFat > 10 ? 10 : Math.floor(satFat);
-      negative += sodium > 900 ? 10 : Math.floor(sodium / 90);
+      const neg = scoreEnergy(d.energy) + scoreSugars(d.sugars) +
+                  scoreSatFat(d.satFat) + scoreSalt(d.salt);
+      const pos = scoreFiber(d.fiber || 0) + scoreProtein(d.protein || 0) +
+                  scoreFruitVeg(d.fruitVeg || 0);
 
-      let positive = 0;
-      positive += fiber > 4.7 ? 5 : Math.floor(fiber);
-      positive += protein > 8 ? 5 : Math.floor(protein);
-      positive += fvPercent > 80 ? 5 : fvPercent > 60 ? 2 : fvPercent > 40 ? 1 : 0;
+      const final = neg - pos;
 
-      const total = negative - positive;
-      return total;
+      if (final <= -1) return 'A';
+      if (final <= 2) return 'B';
+      if (final <= 10) return 'C';
+      if (final <= 18) return 'D';
+      return 'E';
     }
 
-    function showScore(score) {
-      const gradeEl = document.getElementById("score");
-      let grade = "", css = "";
-      if (score <= -1) { grade = "A"; css = "grade-A"; }
-      else if (score <= 2) { grade = "B"; css = "grade-B"; }
-      else if (score <= 10) { grade = "C"; css = "grade-C"; }
-      else if (score <= 18) { grade = "D"; css = "grade-D"; }
-      else { grade = "E"; css = "grade-E"; }
+    const scoreEnergy = kJ => kJ >= 3350 ? 10 : Math.floor(kJ / 335);
+    const scoreSugars = g => g >= 45 ? 10 : Math.floor(g / 4.5);
+    const scoreSatFat = g => g >= 10 ? 10 : Math.floor(g);
+    const scoreSalt = mg => mg >= 900 ? 10 : Math.floor(mg / 90);
+    const scoreFiber = g => g >= 4.7 ? 5 : Math.floor(g);
+    const scoreProtein = g => g >= 8 ? 5 : Math.floor(g / 1.6);
+    const scoreFruitVeg = p => p >= 80 ? 5 : p >= 60 ? 2 : p >= 40 ? 1 : 0;
 
-      gradeEl.innerHTML = `Nutri-Score: <span class="${css}">${grade}</span> (Score: ${score})`;
+    function displayResults(data, grade) {
+      results.innerHTML = `
+        <h3>Extracted Nutrients:</h3>
+        <ul>
+          <li><strong>Energy:</strong> ${data.energy || '—'} kJ</li>
+          <li><strong>Sugars:</strong> ${data.sugars || '—'} g</li>
+          <li><strong>Saturated Fat:</strong> ${data.satFat || '—'} g</li>
+          <li><strong>Salt:</strong> ${data.salt || '—'} mg</li>
+          <li><strong>Fiber:</strong> ${data.fiber || '—'} g</li>
+          <li><strong>Protein:</strong> ${data.protein || '—'} g</li>
+          <li><strong>Fruit/Veg %:</strong> ${data.fruitVeg || '—'}%</li>
+        </ul>
+        <div class="nutriscore ${grade}">
+          Nutri-Score: ${grade}
+        </div>
+      `;
     }
   </script>
 </body>
