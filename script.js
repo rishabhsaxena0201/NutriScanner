@@ -1,63 +1,75 @@
-const video = document.getElementById("video");
-const canvas = document.getElementById("canvas");
-const captureButton = document.getElementById("capture");
-const uploadInput = document.getElementById("upload");
-const outputText = document.getElementById("outputText");
-const progressBar = document.getElementById("progressBar");
+const video = document.getElementById('camera');
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const captureBtn = document.getElementById('captureBtn');
+const uploadInput = document.getElementById('uploadInput');
+const extractedTextDiv = document.getElementById('extractedText');
+const loadingIndicator = document.getElementById('loadingIndicator');
 
-// Camera Access
-navigator.mediaDevices.getUserMedia({ video: true })
-  .then(stream => {
+// Start rear camera
+async function startCamera() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: 'environment' } },
+      audio: false
+    });
     video.srcObject = stream;
-  })
-  .catch(err => {
-    console.error("Camera error:", err);
-    alert("Camera access failed. Use the upload button instead.");
-  });
+    video.style.display = 'block';
+    captureBtn.disabled = false;
+  } catch (err) {
+    alert("Could not access camera.");
+    console.error(err);
+  }
+}
+
+// Run OCR using Tesseract
+async function extractTextFromImage(imageData) {
+  loadingIndicator.style.display = 'block';
+  extractedTextDiv.innerText = '';
+
+  try {
+    const result = await Tesseract.recognize(imageData, 'eng', {
+      logger: m => console.log(m)
+    });
+    extractedTextDiv.innerText = result.data.text;
+  } catch (error) {
+    extractedTextDiv.innerText = 'Error extracting text.';
+    console.error(error);
+  } finally {
+    loadingIndicator.style.display = 'none';
+  }
+}
 
 // Capture from camera
-captureButton.addEventListener("click", () => {
+captureBtn.addEventListener('click', () => {
   canvas.width = video.videoWidth;
   canvas.height = video.videoHeight;
-  canvas.getContext("2d").drawImage(video, 0, 0);
-  const imageData = canvas.toDataURL("image/png");
-  runOCR(imageData);
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  canvas.toBlob(blob => extractTextFromImage(blob));
 });
 
-// Upload from file
-uploadInput.addEventListener("change", event => {
-  const file = event.target.files[0];
+// Upload image from gallery
+uploadInput.addEventListener('change', () => {
+  const file = uploadInput.files[0];
   if (!file) return;
 
+  const img = new Image();
   const reader = new FileReader();
-  reader.onload = () => runOCR(reader.result);
+
+  reader.onload = function (e) {
+    img.onload = function () {
+      canvas.width = img.width;
+      canvas.height = img.height;
+      ctx.drawImage(img, 0, 0);
+      canvas.toBlob(blob => extractTextFromImage(blob));
+    };
+    img.src = e.target.result;
+  };
+
   reader.readAsDataURL(file);
 });
 
-// OCR using Tesseract
-function runOCR(imageData) {
-  outputText.textContent = "Scanning...";
-  progressBar.style.width = "10%";
-
-  Tesseract.recognize(
-    imageData,
-    "eng",
-    {
-      logger: m => {
-        if (m.status === "recognizing text") {
-          progressBar.style.width = `${10 + m.progress * 90}%`;
-        }
-      }
-    }
-  )
-  .then(({ data: { text } }) => {
-    outputText.textContent = text.trim() || "No text found.";
-    progressBar.style.width = "100%";
-    setTimeout(() => (progressBar.style.width = "0%"), 1500);
-  })
-  .catch(err => {
-    console.error("OCR error:", err);
-    outputText.textContent = "Error scanning text.";
-    progressBar.style.width = "0%";
-  });
-}
+// Initialize on page load
+window.addEventListener('load', () => {
+  startCamera();
+});
