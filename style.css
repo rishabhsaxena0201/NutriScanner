@@ -1,26 +1,27 @@
 body {
   font-family: 'Segoe UI', sans-serif;
   background-color: #f4f4f4;
+  margin: 0;
+  padding: 0;
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
-  margin: 0;
+  min-height: 100vh;
 }
 
 .container {
-  background-color: white;
+  background-color: #ffffff;
   padding: 2rem;
-  border-radius: 20px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  border-radius: 15px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
   text-align: center;
   width: 90%;
   max-width: 600px;
 }
 
 h1 {
-  color: #2c3e50;
   margin-bottom: 20px;
+  color: #2c3e50;
 }
 
 input[type="file"] {
@@ -28,15 +29,15 @@ input[type="file"] {
 }
 
 .result-box {
-  background-color: #ecf0f1;
-  padding: 1rem;
-  border-radius: 10px;
   margin-top: 1rem;
-  min-height: 60px;
+  padding: 1rem;
+  background-color: #ecf0f1;
+  border-radius: 10px;
+  min-height: 80px;
 }
 
-#score {
-  margin-top: 1rem;
-  font-size: 1.5rem;
-  font-weight: bold;
+#result, #score {
+  margin: 0.5rem 0;
+  font-size: 1rem;
+  word-wrap: break-word;
 }
