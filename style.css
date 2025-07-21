@@ -1,51 +1,27 @@
 body {
-  font-family: Arial, sans-serif;
-  background: #f9f9f9;
+  font-family: sans-serif;
   text-align: center;
   padding: 10px;
 }
 
-.container {
-  max-width: 400px;
-  margin: auto;
-}
-
 video {
-  width: 100%;
-  border-radius: 10px;
-  margin-bottom: 10px;
-  box-shadow: 0 0 8px rgba(0,0,0,0.2);
+  width: 90%;
+  max-width: 400px;
+  margin-top: 10px;
+  border: 2px solid #aaa;
+  border-radius: 8px;
 }
 
 .controls {
   margin-bottom: 10px;
 }
 
-button, input[type="file"] {
-  margin: 5px;
-  padding: 10px;
-  font-size: 16px;
-  border-radius: 8px;
-  border: none;
-  background: #4caf50;
-  color: white;
-  cursor: pointer;
-}
-
-button:hover {
-  background: #45a049;
+#captureButton {
+  margin-top: 10px;
 }
 
 #output {
   margin-top: 20px;
-  background: white;
   padding: 10px;
-  border-radius: 10px;
-  box-shadow: 0 0 5px rgba(0,0,0,0.1);
-}
-
-img {
-  width: 100%;
-  margin-top: 10px;
-  border-radius: 8px;
+  border: 1px solid #ccc;
 }
