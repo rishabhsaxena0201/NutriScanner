@@ -11,15 +11,17 @@
     <h1>NutriScanner</h1>
     <video id="video" autoplay playsinline></video>
     <canvas id="canvas" style="display:none;"></canvas>
-    
+
     <div class="button-row">
-      <button id="start-camera">📷 Start Camera</button>
       <button id="switch-camera">🔁 Switch Camera</button>
-      <button id="capture" disabled>🖼️ Capture</button>
+      <button id="capture" disabled>📸 Capture</button>
     </div>
 
-    <input type="file" id="image-upload" accept="image/*">
-    
+    <label class="upload-label">
+      📁 Upload Image
+      <input type="file" id="image-upload" accept="image/*">
+    </label>
+
     <div id="output"></div>
   </div>
 
