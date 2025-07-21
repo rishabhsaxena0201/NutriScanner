@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>NutriScanner</title>
   <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
@@ -11,8 +11,11 @@
   <div class="container">
     <h1>NutriScanner</h1>
     <input type="file" id="imageInput" accept="image/*" />
-    <div class="result-box" id="result">Upload image to extract data...</div>
-    <div id="score"></div>
+    
+    <div class="result-box">
+      <p id="result">Upload an image to extract nutrition info</p>
+      <p id="score"></p>
+    </div>
   </div>
 
   <script src="script.js"></script>
