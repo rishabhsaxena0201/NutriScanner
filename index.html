@@ -5,23 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>NutriScanner</title>
   <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.0.0/dist/tesseract.min.js"></script>
 </head>
 <body>
-  <div class="scanner-container">
+  <div class="container">
     <h1>NutriScanner</h1>
     <video id="video" autoplay playsinline></video>
-    <canvas id="canvas" style="display:none;"></canvas>
-
-    <div class="button-row">
-      <button id="switch-camera">🔁 Switch Camera</button>
-      <button id="capture" disabled>📸 Capture</button>
+    
+    <div class="controls">
+      <button id="switchCameraBtn">🔁 Switch Camera</button>
+      <button id="captureBtn">📷 Capture</button>
+      <input type="file" id="uploadInput" accept="image/*" />
     </div>
-
-    <label class="upload-label">
-      📁 Upload Image
-      <input type="file" id="image-upload" accept="image/*">
-    </label>
-
+    
+    <canvas id="canvas" style="display:none;"></canvas>
     <div id="output"></div>
   </div>
 
