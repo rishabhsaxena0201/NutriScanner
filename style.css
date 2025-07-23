@@ -1,79 +1,50 @@
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #f2f4f8;
+  font-family: sans-serif;
+  background: #f3f4f6;
   margin: 0;
-  padding: 0;
   text-align: center;
 }
 
 .container {
-  padding: 1.5rem;
   max-width: 600px;
-  margin: auto;
-}
-
-h1 {
-  color: #2b2d42;
-}
-
-video, canvas {
-  width: 100%;
-  max-width: 100%;
-  border-radius: 8px;
-  margin-bottom: 1rem;
+  margin: 20px auto;
+  padding: 20px;
+  background: white;
+  border-radius: 10px;
   box-shadow: 0 0 10px rgba(0,0,0,0.1);
 }
 
-button, input[type="file"] {
-  margin: 0.5rem;
-  padding: 0.75rem 1.5rem;
+video {
+  width: 100%;
+  max-height: 300px;
+  border: 2px solid #ccc;
+  border-radius: 8px;
+}
+
+.button-row button,
+.button-row input[type="file"] {
+  margin: 5px;
+  padding: 8px 12px;
   font-size: 1rem;
-  background-color: #2b2d42;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background 0.3s ease;
 }
 
-button:hover {
-  background-color: #1e2135;
+#status {
+  margin-top: 10px;
+  font-style: italic;
+  color: #555;
 }
 
-#output {
-  background: white;
-  padding: 1rem;
-  margin-top: 1rem;
-  border-radius: 8px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.05);
+pre {
   text-align: left;
+  max-height: 120px;
+  overflow: auto;
+  background: #ecf0f1;
+  padding: 10px;
+  border-radius: 6px;
 }
 
-#output h3 {
-  color: #2b2d42;
-}
-
-#output ul {
-  list-style-type: none;
-  padding: 0;
-}
-
-#output li {
-  padding: 0.25rem 0;
-  font-size: 0.95rem;
-}
-
-.grade {
-  font-size: 2rem;
+#scoreOutput {
+  font-size: 1.5rem;
   font-weight: bold;
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  display: inline-block;
-  color: white;
+  margin-top: 10px;
 }
-
-.grade-A { background-color: #009966; }
-.grade-B { background-color: #66cc33; }
-.grade-C { background-color: #ffcc00; }
-.grade-D { background-color: #ff9933; }
-.grade-E { background-color: #cc0033; }
