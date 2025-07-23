@@ -10,27 +10,29 @@
   <div class="container">
     <h1>NutriScanner</h1>
 
-    <div class="video-container">
+    <div class="video-section">
       <video id="video" autoplay playsinline></video>
-      <canvas id="canvas" style="display: none"></canvas>
+      <canvas id="canvas" style="display:none;"></canvas>
     </div>
 
     <div class="controls">
-      <button onclick="startCamera()">Start Camera</button>
-      <button onclick="switchCamera()">Switch Camera</button>
-      <button onclick="captureImage()">Scan</button>
-      <input type="file" accept="image/*" onchange="handleUpload(event)" />
+      <button id="startCamera">Start Camera</button>
+      <button id="switchCamera">Switch Camera</button>
+      <input type="file" id="imageUpload" accept="image/*" />
+      <button id="capture">Capture & Analyze</button>
     </div>
 
-    <p id="status">Ready</p>
+    <div id="loading" class="hidden">📸 Scanning ingredients...</div>
+    <div id="result" class="result-box hidden">
+      <h2>Extracted Text:</h2>
+      <pre id="ocrText"></pre>
 
-    <div id="output">
-      <img id="snapshot" alt="Scanned image will appear here" />
-      <p id="ingredients"></p>
-      <p id="nutriscore"></p>
+      <h2>Nutri-Score:</h2>
+      <div id="nutriScore" class="nutri-grade"></div>
     </div>
   </div>
 
-  <script src="script.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2/dist/tesseract.min.js"></script>
+  <script src="script.js" defer></script>
 </body>
 </html>
