@@ -1,42 +1,79 @@
 body {
-  font-family: 'Segoe UI', sans-serif;
-  background: #f1f2f3;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f2f4f8;
   margin: 0;
   padding: 0;
-}
-
-.container {
-  max-width: 800px;
-  margin: 2rem auto;
-  background: #fff;
-  padding: 2rem;
-  border-radius: 16px;
-  box-shadow: 0 0 15px rgba(0,0,0,0.1);
   text-align: center;
 }
 
+.container {
+  padding: 1.5rem;
+  max-width: 600px;
+  margin: auto;
+}
+
 h1 {
-  color: #2c3e50;
-  font-size: 2.5rem;
-  margin-bottom: 1.5rem;
+  color: #2b2d42;
 }
 
-.controls {
-  margin-bottom: 1rem;
-}
-
-#video {
+video, canvas {
   width: 100%;
-  max-height: 300px;
-  margin: 1rem 0;
-  border-radius: 12px;
+  max-width: 100%;
+  border-radius: 8px;
+  margin-bottom: 1rem;
   box-shadow: 0 0 10px rgba(0,0,0,0.1);
 }
 
-.text-box {
-  background: #ecf0f1;
+button, input[type="file"] {
+  margin: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  background-color: #2b2d42;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+button:hover {
+  background-color: #1e2135;
+}
+
+#output {
+  background: white;
   padding: 1rem;
   margin-top: 1rem;
   border-radius: 8px;
-  font-size: 1.1rem;
+  box-shadow: 0 0 10px rgba(0,0,0,0.05);
+  text-align: left;
 }
+
+#output h3 {
+  color: #2b2d42;
+}
+
+#output ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+#output li {
+  padding: 0.25rem 0;
+  font-size: 0.95rem;
+}
+
+.grade {
+  font-size: 2rem;
+  font-weight: bold;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  display: inline-block;
+  color: white;
+}
+
+.grade-A { background-color: #009966; }
+.grade-B { background-color: #66cc33; }
+.grade-C { background-color: #ffcc00; }
+.grade-D { background-color: #ff9933; }
+.grade-E { background-color: #cc0033; }
