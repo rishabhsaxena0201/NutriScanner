@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>NutriScanner</title>
   <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
@@ -10,19 +10,17 @@
 <body>
   <div class="container">
     <h1>NutriScanner</h1>
+    <video id="video" autoplay playsinline></video>
+    <canvas id="canvas" style="display:none;"></canvas>
 
-    <div class="camera-container">
-      <video id="video" autoplay playsinline></video>
-      <canvas id="canvas" style="display: none;"></canvas>
-      <div class="button-row">
-        <button id="startCamera">Start Camera</button>
-        <button id="switchCameraButton">Switch Camera</button>
-        <button id="captureButton">Capture</button>
-        <input type="file" id="fileInput" accept="image/*" />
-      </div>
+    <div class="button-row">
+      <button id="startCamera">Start Camera</button>
+      <button id="switchCameraButton">Switch Camera</button>
+      <button id="captureButton">Capture</button>
+      <input type="file" id="fileInput" accept="image/*" />
     </div>
 
-    <div id="status">Waiting for image...</div>
+    <div id="status">Ready—please capture or upload an image.</div>
 
     <div id="output">
       <h2>OCR Text</h2>
