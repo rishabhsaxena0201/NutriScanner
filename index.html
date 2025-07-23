@@ -10,19 +10,27 @@
   <div class="container">
     <h1>NutriScanner</h1>
 
-    <div class="controls">
-      <input type="file" id="imageUpload" accept="image/*" />
-      <button id="startCamera">Start Camera</button>
-      <button id="switchCamera">Switch Camera</button>
+    <div class="video-container">
+      <video id="video" autoplay playsinline></video>
+      <canvas id="canvas" style="display: none"></canvas>
     </div>
 
-    <video id="video" autoplay playsinline></video>
-    <canvas id="canvas" style="display:none;"></canvas>
+    <div class="controls">
+      <button onclick="startCamera()">Start Camera</button>
+      <button onclick="switchCamera()">Switch Camera</button>
+      <button onclick="captureImage()">Scan</button>
+      <input type="file" accept="image/*" onchange="handleUpload(event)" />
+    </div>
 
-    <div id="textResult" class="text-box">Upload image to extract data...</div>
+    <p id="status">Ready</p>
+
+    <div id="output">
+      <img id="snapshot" alt="Scanned image will appear here" />
+      <p id="ingredients"></p>
+      <p id="nutriscore"></p>
+    </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.4/dist/tesseract.min.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
