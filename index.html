@@ -5,34 +5,34 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>NutriScanner</title>
   <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
 </head>
 <body>
   <div class="container">
     <h1>NutriScanner</h1>
-
-    <div class="video-section">
+    <div class="camera-container">
       <video id="video" autoplay playsinline></video>
-      <canvas id="canvas" style="display:none;"></canvas>
+      <canvas id="canvas" style="display: none;"></canvas>
+      <div class="button-row">
+        <button id="startCamera">Start Camera</button>
+        <button id="switchCamera">Switch Camera</button>
+        <button id="capture">Capture</button>
+        <input type="file" id="upload" accept="image/*" />
+      </div>
     </div>
 
-    <div class="controls">
-      <button id="startCamera">Start Camera</button>
-      <button id="switchCamera">Switch Camera</button>
-      <input type="file" id="imageUpload" accept="image/*" />
-      <button id="capture">Capture & Analyze</button>
-    </div>
-
-    <div id="loading" class="hidden">📸 Scanning ingredients...</div>
-    <div id="result" class="result-box hidden">
-      <h2>Extracted Text:</h2>
+    <div id="status">Waiting for image...</div>
+    <div id="output">
+      <h2>OCR Text</h2>
       <pre id="ocrText"></pre>
 
-      <h2>Nutri-Score:</h2>
-      <div id="nutriScore" class="nutri-grade"></div>
+      <h2>Extracted Nutrition</h2>
+      <pre id="nutritionData"></pre>
+
+      <h2>Nutri-Score</h2>
+      <div id="nutriScore"></div>
     </div>
   </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2/dist/tesseract.min.js"></script>
-  <script src="script.js" defer></script>
+  <script src="script.js"></script>
 </body>
 </html>
