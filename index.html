@@ -10,29 +10,32 @@
 <body>
   <div class="container">
     <h1>NutriScanner</h1>
+
     <div class="camera-container">
       <video id="video" autoplay playsinline></video>
       <canvas id="canvas" style="display: none;"></canvas>
       <div class="button-row">
         <button id="startCamera">Start Camera</button>
-        <button id="switchCamera">Switch Camera</button>
-        <button id="capture">Capture</button>
-        <input type="file" id="upload" accept="image/*" />
+        <button id="switchCameraButton">Switch Camera</button>
+        <button id="captureButton">Capture</button>
+        <input type="file" id="fileInput" accept="image/*" />
       </div>
     </div>
 
     <div id="status">Waiting for image...</div>
+
     <div id="output">
       <h2>OCR Text</h2>
-      <pre id="ocrText"></pre>
+      <pre id="ocrOutput"></pre>
 
       <h2>Extracted Nutrition</h2>
-      <pre id="nutritionData"></pre>
+      <pre id="nutritionOutput"></pre>
 
       <h2>Nutri-Score</h2>
-      <div id="nutriScore"></div>
+      <div id="scoreOutput"></div>
     </div>
   </div>
+
   <script src="script.js"></script>
 </body>
 </html>
