@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Indian Food Nutri-Score Calculator</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <!-- Header / Navigation -->
+  <header class="header">
+    <div class="container flex justify-between items-center py-16">
+      <h2 class="app-title">Indian Food Nutri-Score Calculator</h2>
+      <nav class="nav flex gap-8">
+        <a href="#home" class="nav__link" data-section="home">Home</a>
+        <a href="#education" class="nav__link" data-section="education">Education</a>
+        <a href="#help" class="nav__link" data-section="help">Help</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- HOME SECTION -->
+    <section id="home" class="section">
+      <div class="container flex flex-col items-center text-center py-16 gap-16">
+        <h1>Calculate Nutri-Score for Indian Packaged Foods</h1>
+        <p style="max-width: 640px;">
+          Nutri-Score is a front-of-pack label adopted in the European Union that
+          helps consumers understand the overall nutritional quality of a food
+          product. It rates foods from <strong>A</strong> (healthiest) to
+          <strong>E</strong> (least healthy), taking into account nutrients such
+          as energy, sugars, saturated fat, salt, fibre and protein.
+        </p>
+
+        <!-- Nutri-Score Scale Illustration -->
+        <div class="nutri-scale flex gap-4" aria-label="Nutri-Score scale">
+          <span class="scale-box grade-A">A</span>
+          <span class="scale-box grade-B">B</span>
+          <span class="scale-box grade-C">C</span>
+          <span class="scale-box grade-D">D</span>
+          <span class="scale-box grade-E">E</span>
+        </div>
+
+        <button id="btnQuickStart" class="btn btn--primary btn--lg mt-8">
+          Quick Start
+        </button>
+      </div>
+    </section>
+
+    <!-- INPUT SECTION -->
+    <section id="input" class="section hidden">
+      <div class="container py-16">
+        <h2 class="mb-8">Enter Ingredients & Nutrition Facts</h2>
+
+        <div class="form-group mb-8">
+          <label for="sampleFood" class="form-label">Load a Sample Food</label>
+          <select id="sampleFood" class="form-control">
+            <option value="">-- None --</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="ingredients" class="form-label">Ingredients List</label>
+          <textarea id="ingredients" rows="4" class="form-control" placeholder="e.g. Wheat flour, Palm oil, Salt, Sugar, Spices..."></textarea>
+        </div>
+
+        <!-- Nutrition Inputs -->
+        <h3 class="mt-8 mb-8">Nutrition Information per 100 g</h3>
+        <div class="nutrition-grid">
+          <div class="form-group">
+            <label class="form-label" for="energy">Energy (kJ)</label>
+            <input type="number" id="energy" class="form-control" min="0" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="satFat">Saturated Fat (g)</label>
+            <input type="number" id="satFat" class="form-control" min="0" step="0.1" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="sugar">Total Sugar (g)</label>
+            <input type="number" id="sugar" class="form-control" min="0" step="0.1" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="salt">Salt (g)</label>
+            <input type="number" id="salt" class="form-control" min="0" step="0.1" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="fiber">Fibre (g)</label>
+            <input type="number" id="fiber" class="form-control" min="0" step="0.1" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="protein">Protein (g)</label>
+            <input type="number" id="protein" class="form-control" min="0" step="0.1" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="fv">Fruits / Veggies / Pulses (%)</label>
+            <input type="number" id="fv" class="form-control" min="0" max="100" step="1" />
+          </div>
+        </div>
+
+        <button id="btnCalculate" class="btn btn--primary btn--lg mt-8">
+          Calculate Nutri-Score
+        </button>
+      </div>
+    </section>
+
+    <!-- RESULTS SECTION -->
+    <section id="results" class="section hidden">
+      <div class="container py-16">
+        <div id="resultCard" class="card">
+          <div class="card__body flex flex-col gap-16 items-center">
+            <h2>Your Nutri-Score</h2>
+            <div id="gradeDisplay" class="grade-display">A</div>
+            <p id="gradeDescription" class="grade-desc"></p>
+
+            <!-- Breakdown -->
+            <div class="breakdown flex flex-col gap-8" style="width:100%; max-width:640px;">
+              <div class="flex justify-between"><span>Negative Points</span><span id="negPoints">0</span></div>
+              <div class="flex justify-between"><span>Positive Points</span><span id="posPoints">0</span></div>
+              <div class="flex justify-between"><span>Final Score</span><span id="finalScore">0</span></div>
+            </div>
+
+            <!-- Chart container -->
+            <div class="chart-container" style="position: relative; height:300px; width:100%; max-width:640px;">
+              <canvas id="scoreChart"></canvas>
+            </div>
+
+            <div id="recommendations" style="max-width:640px;"></div>
+
+            <button id="btnAnother" class="btn btn--secondary btn--lg mt-8">
+              Try Another Product
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- EDUCATION SECTION -->
+    <section id="education" class="section hidden">
+      <div class="container py-16">
+        <h2 class="mb-8">Learn about Nutri-Score</h2>
+        <p>Nutri-Score is an evidence-based front-of-pack nutrition label adopted across many EU countries. It summarises the balance of beneficial and less favourable nutrients in a single letter grade.</p>
+        <ul class="mb-8">
+          <li><strong>A</strong>: Best nutritional quality</li>
+          <li><strong>B</strong>: Good nutritional quality</li>
+          <li><strong>C</strong>: Fair nutritional quality</li>
+          <li><strong>D</strong>: Poor nutritional quality</li>
+          <li><strong>E</strong>: Very poor nutritional quality</li>
+        </ul>
+        <h3 class="mb-8">How does it apply to Indian foods?</h3>
+        <p>Although Nutri-Score was designed for EU markets, the same underlying nutrients are required on Indian nutrition labels. By entering the values reported per 100 g, Indian shoppers can still benefit from the simple A–E guidance.</p>
+        <h3 class="mb-8">Comparison with Popular Indian Nutrition Apps</h3>
+        <div id="appsTableWrapper"></div>
+      </div>
+    </section>
+
+    <!-- HELP SECTION -->
+    <section id="help" class="section hidden">
+      <div class="container py-16">
+        <h2 class="mb-8">About & Help</h2>
+        <p>This calculator is a simplified educational tool. For packaged foods sold in India, manufacturers must follow FSSAI nutrition-labelling regulations.</p>
+        <h3 class="mb-8">Key FSSAI Requirements</h3>
+        <ul id="fssaiList" class="mb-8"></ul>
+        <h3 class="mb-8">How this Calculator Works</h3>
+        <p>The EU Nutri-Score algorithm assigns points to nutrients per 100 g: energy, sugars, saturated fat and salt add negative points; fibre, protein and the proportion of fruits/vegetables/pulses add positive points. The final grade is derived by subtracting positive from negative points.</p>
+        <p>Because this is a simplified model, results may not match official Nutri-Score certifications.</p>
+        <h3 class="mb-8">Contact</h3>
+        <p>Email: <a href="mailto:info@nscalc.example.com" target="_blank">info@nscalc.example.com</a></p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer py-16 flex justify-center items-center">
+    <p class="m-0">© 2025 Indian Food Nutri-Score Calculator</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
