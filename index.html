@@ -1,183 +1,100 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
   <title>NutriScanner</title>
   <style>
     body {
       font-family: sans-serif;
-      padding: 1rem;
-      background: #fdfdfd;
-      color: #222;
+      padding: 20px;
     }
-    .container {
-      max-width: 500px;
-      margin: auto;
-    }
-    video, canvas {
-      width: 100%;
-      border-radius: 12px;
-    }
-    button, input[type=file] {
-      margin: 0.3rem;
-      padding: 0.6rem;
-    }
-    #output pre {
+    #output {
+      margin-top: 20px;
       white-space: pre-wrap;
-      background: #f1f1f1;
-      padding: 0.5rem;
-      border-radius: 8px;
     }
-    #nutriBreakdown {
-      font-size: 0.9rem;
-      background: #eef;
-      padding: 0.5rem;
-      border-radius: 8px;
+    #image-preview {
+      margin-top: 10px;
+      max-width: 100%;
     }
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
 </head>
 <body>
-  <div class="container">
-    <h1>NutriScanner</h1>
-    <video id="video" autoplay playsinline></video>
-    <canvas id="canvas" style="display:none"></canvas>
-    <div>
-      <button id="startCamera">Start Camera</button>
-      <button id="capture">Capture</button>
-      <input type="file" id="upload" accept="image/*" />
-    </div>
+  <h2>NutriScanner</h2>
 
-    <div id="status">Waiting for image...</div>
-    <div id="output">
-      <h2>OCR Text</h2>
-      <pre id="ocrText"></pre>
+  <input type="file" accept="image/*" capture="environment" id="cameraInput" style="display: none;" />
+  <button onclick="document.getElementById('cameraInput').click()">Start Camera</button>
 
-      <h2>Nutrition Info</h2>
-      <pre id="nutritionData"></pre>
+  <img id="image-preview" />
+  <div id="output">Awaiting image...</div>
 
-      <h2>Nutri-Score</h2>
-      <div id="nutriScore"></div>
-      <div id="nutriBreakdown"></div>
-    </div>
-  </div>
-
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.0.1/dist/tesseract.min.js"></script>
   <script>
-    const video = document.getElementById('video');
-    const canvas = document.getElementById('canvas');
-    const ctx = canvas.getContext('2d');
-    const upload = document.getElementById('upload');
-    const status = document.getElementById('status');
+    const input = document.getElementById('cameraInput');
+    const output = document.getElementById('output');
+    const imgPreview = document.getElementById('image-preview');
 
-    let stream;
-
-    document.getElementById('startCamera').onclick = async () => {
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-        video.srcObject = stream;
-        status.textContent = 'Camera started';
-      } catch (e) {
-        status.textContent = 'Error accessing camera';
-      }
-    };
-
-    document.getElementById('capture').onclick = () => {
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      ctx.drawImage(video, 0, 0);
-      processImage(canvas.toDataURL());
-    };
-
-    upload.onchange = e => {
-      const file = e.target.files[0];
+    input.addEventListener('change', async () => {
+      const file = input.files[0];
       if (!file) return;
-      const reader = new FileReader();
-      reader.onload = () => processImage(reader.result);
-      reader.readAsDataURL(file);
-    };
 
-    function processImage(dataUrl) {
-      status.textContent = 'Processing image...';
-      Tesseract.recognize(dataUrl, 'eng')
-        .then(({ data: { text } }) => {
-          document.getElementById('ocrText').textContent = text;
-          extractNutritionAndScore(text);
-        })
-        .catch(() => status.textContent = 'OCR failed');
-    }
+      output.textContent = 'Scanning image...';
+      imgPreview.src = URL.createObjectURL(file);
 
-    function extractNutritionAndScore(text) {
-      status.textContent = 'Extracting nutrition...';
-      const nutrition = {};
+      const { data: { text } } = await Tesseract.recognize(file, 'eng');
+      output.textContent = 'Extracted text:\n' + text;
 
-      const lines = text.split(/\n|,/);
-      for (let line of lines) {
-        line = line.toLowerCase();
-        if (line.includes('energy')) {
-          const match = line.match(/energy[^\d]*(\d+)/);
-          if (match) nutrition.energy = parseInt(match[1]);
-        } else if (line.includes('sugar')) {
-          const match = line.match(/(\d+(\.\d+)?)\s*g/);
-          if (match) nutrition.sugar = parseFloat(match[1]);
-        } else if (line.includes('fat') && line.includes('sat')) {
-          const match = line.match(/(\d+(\.\d+)?)\s*g/);
-          if (match) nutrition.saturatedFat = parseFloat(match[1]);
-        } else if (line.includes('sodium') || line.includes('salt')) {
-          const match = line.match(/(\d+(\.\d+)?)\s*mg/);
-          if (match) nutrition.sodium = parseFloat(match[1]);
-        } else if (line.includes('fiber')) {
-          const match = line.match(/(\d+(\.\d+)?)\s*g/);
-          if (match) nutrition.fiber = parseFloat(match[1]);
-        } else if (line.includes('protein')) {
-          const match = line.match(/(\d+(\.\d+)?)\s*g/);
-          if (match) nutrition.protein = parseFloat(match[1]);
-        }
-      }
-
-      document.getElementById('nutritionData').textContent = JSON.stringify(nutrition, null, 2);
-      calculateNutriScore(nutrition);
-    }
-
-    function calculateNutriScore(n) {
-      const getPoints = (val, scale) => {
-        for (let [threshold, points] of scale) if (val >= threshold) return points;
-        return 0;
+      // Basic nutrition extraction
+      const nutrition = {
+        energy: parseFloat((/energy.*?(\d+)\s?k?cal/i.exec(text) || [])[1]) || 0,
+        sugar: parseFloat((/sugars?.*?(\d+(\.\d+)?)/i.exec(text) || [])[1]) || 0,
+        fat: parseFloat((/saturated.*?(\d+(\.\d+)?)/i.exec(text) || [])[1]) || 0,
+        sodium: parseFloat((/sodium.*?(\d+(\.\d+)?)/i.exec(text) || [])[1]) || 0,
+        fiber: parseFloat((/fiber.*?(\d+(\.\d+)?)/i.exec(text) || [])[1]) || 0,
+        protein: parseFloat((/protein.*?(\d+(\.\d+)?)/i.exec(text) || [])[1]) || 0,
+        fruits: parseFloat((/fruit.*?(\d+)%?/i.exec(text) || [])[1]) || 0,
       };
 
-      let pointsNeg = 0, pointsPos = 0, breakdown = [];
-      if (n.energy) {
-        const p = getPoints(n.energy, [[3350,10],[3015,9],[2680,8],[2345,7],[2010,6],[1675,5],[1340,4],[1005,3],[670,2],[335,1]]);
-        breakdown.push(`Energy: ${n.energy} kJ → ${p} pts`); pointsNeg += p;
-      }
-      if (n.sugar) {
-        const p = getPoints(n.sugar, [[45,10],[40,9],[36,8],[31,7],[27,6],[22.5,5],[18,4],[13.5,3],[9,2],[4.5,1]]);
-        breakdown.push(`Sugar: ${n.sugar}g → ${p} pts`); pointsNeg += p;
-      }
-      if (n.saturatedFat) {
-        const p = getPoints(n.saturatedFat, [[10,10],[9,9],[8,8],[7,7],[6,6],[5,5],[4,4],[3,3],[2,2],[1,1]]);
-        breakdown.push(`Saturated Fat: ${n.saturatedFat}g → ${p} pts`); pointsNeg += p;
-      }
-      if (n.sodium) {
-        const p = getPoints(n.sodium, [[900,10],[810,9],[720,8],[630,7],[540,6],[450,5],[360,4],[270,3],[180,2],[90,1]]);
-        breakdown.push(`Sodium: ${n.sodium}mg → ${p} pts`); pointsNeg += p;
-      }
+      const scoreBreakdown = calculateNutriScore(nutrition);
+      output.textContent += '\n\nNutri-Score: ' + scoreBreakdown.score;
+      output.textContent += '\n\nBreakdown:\n' + JSON.stringify(scoreBreakdown.details, null, 2);
+    });
 
-      if (n.fiber) {
-        const p = getPoints(n.fiber, [[4.7,5],[3.7,4],[2.8,3],[1.9,2],[0.9,1]]);
-        breakdown.push(`Fiber: ${n.fiber}g → ${p} pts`); pointsPos += p;
-      }
-      if (n.protein) {
-        const p = getPoints(n.protein, [[8.0,5],[6.4,4],[4.8,3],[3.2,2],[1.6,1]]);
-        breakdown.push(`Protein: ${n.protein}g → ${p} pts`); pointsPos += p;
-      }
+    function calculateNutriScore(n) {
+      // Negative points
+      const energyPoints = Math.min(Math.floor(n.energy / 335), 10); // Roughly kJ
+      const sugarPoints = Math.min(Math.floor(n.sugar), 10);
+      const fatPoints = Math.min(Math.floor(n.fat), 10);
+      const sodiumPoints = Math.min(Math.floor(n.sodium / 90), 10);
 
-      const score = pointsNeg - pointsPos;
-      const grade = score <= -1 ? 'A' : score <= 2 ? 'B' : score <= 10 ? 'C' : score <= 18 ? 'D' : 'E';
+      // Positive points
+      const fiberPoints = Math.min(Math.floor(n.fiber), 5);
+      const proteinPoints = Math.min(Math.floor(n.protein), 5);
+      const fruitPoints = n.fruits >= 80 ? 5 : n.fruits >= 60 ? 2 : n.fruits >= 40 ? 1 : 0;
 
-      document.getElementById('nutriScore').textContent = `Nutri-Score: ${grade}`;
-      document.getElementById('nutriBreakdown').innerHTML = `<strong>Breakdown:</strong><br>` + breakdown.join('<br>');
-      status.textContent = 'Done';
+      const negative = energyPoints + sugarPoints + fatPoints + sodiumPoints;
+      const positive = fiberPoints + proteinPoints + fruitPoints;
+
+      let score = negative - positive;
+
+      let grade = 'E';
+      if (score <= -1) grade = 'A';
+      else if (score <= 2) grade = 'B';
+      else if (score <= 10) grade = 'C';
+      else if (score <= 18) grade = 'D';
+
+      return {
+        score: grade,
+        details: {
+          energyPoints,
+          sugarPoints,
+          fatPoints,
+          sodiumPoints,
+          fiberPoints,
+          proteinPoints,
+          fruitPoints,
+          finalScore: score
+        }
+      };
     }
   </script>
 </body>
